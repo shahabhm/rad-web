@@ -4,6 +4,7 @@ import DeleteAccount from './DeleteAccount';
 import Avatar from './Avatar';
 import EnableTwoFactorItem from './TwoFactorAuthentication';
 import BackupCodesItem from './BackupCodesItem';
+import PlankaConnection from './PlankaConnection';
 import { useAuthContext } from '~/hooks';
 
 function Account() {
@@ -29,6 +30,9 @@ function Account() {
           )}
         </>
       )}
+      <div className="pb-3">
+        <PlankaConnection />
+      </div>
       <div className="pb-3">
         <DeleteAccount />
       </div>
