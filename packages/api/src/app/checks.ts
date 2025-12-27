@@ -248,15 +248,32 @@ export async function performStartupChecks(appConfig?: AppConfig) {
  * @param config - The loaded custom configuration.
  */
 export function checkConfig(config: Partial<TCustomConfig>) {
-  if (config.version !== Constants.CONFIG_VERSION) {
-    logger.info(
-      `\nOutdated Config version: ${config.version}
-Latest version: ${Constants.CONFIG_VERSION}
+  // Debug logging
+  logger.debug('=== Config Debug Info ===');
+  logger.debug('Config object received:', JSON.stringify(config, null, 2));
+  logger.debug('Expected CONFIG_VERSION:', Constants.CONFIG_VERSION);
+  logger.debug('Config has version property:', 'version' in config);
+  logger.debug('Config version value:', config.version);
+  logger.debug('Config type:', typeof config);
+  logger.debug('Config keys:', Object.keys(config));
+  logger.debug('=========================');
 
-      Check out the Config changelogs for the latest options and features added.
+  if (!config || typeof config !== 'object') {
+    logger.error('Invalid config: Config is not a valid object');
+    return;
+  }
 
-      https://www.librechat.ai/changelog\n\n`,
+  if (config.version === undefined) {
+    logger.warn('Config version is undefined. The config file might be missing or malformed.');
+  } else if (config.version !== Constants.CONFIG_VERSION) {
+    logger.warn(
+      `\nOutdated Config version: ${config.version}\n` +
+      `Latest version: ${Constants.CONFIG_VERSION}\n\n` +
+      'Check out the Config changelogs for the latest options and features added.\n\n' +
+      'https://www.librechat.ai/changelog\n\n'
     );
+  } else {
+    logger.debug('Config version is up to date');
   }
 }
 
