@@ -24,52 +24,51 @@ let i = 0;
  * @returns {Promise<TCustomConfig | null>} A promise that resolves to null or the custom config object.
  * */
 async function loadCustomConfig(printConfig = true) {
-  console.log('[Config Debug] loadCustomConfig called with printConfig:', printConfig);
-  console.log('[Config Debug] Current working directory:', process.cwd());
-  // Use CONFIG_PATH if set, otherwise fallback to defaultConfigPath
-  const configPath = process.env.CONFIG_PATH || defaultConfigPath;
-  console.log('[Config Debug] Using config path:', configPath);
-  console.log('[Config Debug] CONFIG_PATH env var:', process.env.CONFIG_PATH || 'not set');
-  console.log('[Config Debug] Default config path:', defaultConfigPath);
-
+  console.log('=== Config Loading Debug ===');
+  console.log('1. Load function called');
+  console.log('2. Current directory:', process.cwd());
+  console.log('3. NODE_ENV:', process.env.NODE_ENV || 'not set');
+  console.log('4. CONFIG_PATH:', process.env.CONFIG_PATH || 'not set');
+  
+  const fs = require('fs');
+  const configPath = process.env.CONFIG_PATH || path.resolve(process.cwd(), 'librechat.yaml');
+  console.log('5. Using config path:', configPath);
+  console.log('6. File exists:', fs.existsSync(configPath));
+  
   let customConfig;
-
+  
   if (/^https?:\/\//.test(configPath)) {
     try {
-      console.log('[Config Debug] Loading config from remote URL');
+      console.log('7. Loading config from remote URL');
       const response = await axios.get(configPath);
       customConfig = response.data;
-      console.log('[Config Debug] Successfully loaded config from remote URL');
+      console.log('8. Successfully loaded config from remote URL');
     } catch (error) {
-      i === 0 && logger.error(`Failed to fetch the remote config file from ${configPath}`, error);
-      i === 0 && i++;
+      console.error('9. Error loading remote config:', error.message);
       return null;
     }
   } else {
-    console.log('[Config Debug] Loading config from local file:', configPath);
-    const fs = require('fs');
-    console.log('[Config Debug] File exists:', fs.existsSync(configPath));
-    
-    try {
-      const fileContent = fs.readFileSync(configPath, 'utf8');
-      console.log('[Config Debug] File content (first 200 chars):', fileContent.substring(0, 200) + (fileContent.length > 200 ? '...' : ''));
-    } catch (err) {
-      console.error('[Config Debug] Error reading file:', err.message);
-    }
-    
-    customConfig = loadYaml(configPath);
-    console.log('[Config Debug] Parsed config:', JSON.stringify(customConfig, null, 2));
-    
-    if (!customConfig) {
-      const errorMsg = 'Custom config file missing or YAML format invalid.';
-      console.error('[Config Debug] ' + errorMsg);
-      i === 0 &&
-        logger.info(
-          'Custom config file missing or YAML format invalid.\n\nCheck out the latest config file guide for configurable options and features.\nhttps://www.librechat.ai/docs/configuration/librechat_yaml\n\n',
-        );
-      i === 0 && i++;
+    if (fs.existsSync(configPath)) {
+      try {
+        const content = fs.readFileSync(configPath, 'utf8');
+        console.log('7. File content (first 200 chars):', content.substring(0, 200));
+        
+        customConfig = loadYaml(configPath);
+        console.log('8. Parsed config:', JSON.stringify(customConfig, null, 2));
+        
+        if (!customConfig) {
+          console.error('9. Failed to parse YAML config');
+          return null;
+        }
+      } catch (err) {
+        console.error('9. Error reading/parsing file:', err.message);
+        return null;
+      }
+    } else {
+      console.log('7. Config file does not exist at path:', configPath);
       return null;
     }
+  }
 
     if (customConfig.reason || customConfig.stack) {
       i === 0 && logger.error('Config file YAML format is invalid:', customConfig);
