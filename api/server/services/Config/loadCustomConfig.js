@@ -24,23 +24,45 @@ let i = 0;
  * @returns {Promise<TCustomConfig | null>} A promise that resolves to null or the custom config object.
  * */
 async function loadCustomConfig(printConfig = true) {
+  console.log('[Config Debug] loadCustomConfig called with printConfig:', printConfig);
+  console.log('[Config Debug] Current working directory:', process.cwd());
   // Use CONFIG_PATH if set, otherwise fallback to defaultConfigPath
   const configPath = process.env.CONFIG_PATH || defaultConfigPath;
+  console.log('[Config Debug] Using config path:', configPath);
+  console.log('[Config Debug] CONFIG_PATH env var:', process.env.CONFIG_PATH || 'not set');
+  console.log('[Config Debug] Default config path:', defaultConfigPath);
 
   let customConfig;
 
   if (/^https?:\/\//.test(configPath)) {
     try {
+      console.log('[Config Debug] Loading config from remote URL');
       const response = await axios.get(configPath);
       customConfig = response.data;
+      console.log('[Config Debug] Successfully loaded config from remote URL');
     } catch (error) {
       i === 0 && logger.error(`Failed to fetch the remote config file from ${configPath}`, error);
       i === 0 && i++;
       return null;
     }
   } else {
+    console.log('[Config Debug] Loading config from local file:', configPath);
+    const fs = require('fs');
+    console.log('[Config Debug] File exists:', fs.existsSync(configPath));
+    
+    try {
+      const fileContent = fs.readFileSync(configPath, 'utf8');
+      console.log('[Config Debug] File content (first 200 chars):', fileContent.substring(0, 200) + (fileContent.length > 200 ? '...' : ''));
+    } catch (err) {
+      console.error('[Config Debug] Error reading file:', err.message);
+    }
+    
     customConfig = loadYaml(configPath);
+    console.log('[Config Debug] Parsed config:', JSON.stringify(customConfig, null, 2));
+    
     if (!customConfig) {
+      const errorMsg = 'Custom config file missing or YAML format invalid.';
+      console.error('[Config Debug] ' + errorMsg);
       i === 0 &&
         logger.info(
           'Custom config file missing or YAML format invalid.\n\nCheck out the latest config file guide for configurable options and features.\nhttps://www.librechat.ai/docs/configuration/librechat_yaml\n\n',

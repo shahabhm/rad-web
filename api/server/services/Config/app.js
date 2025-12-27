@@ -28,24 +28,32 @@ const loadBaseConfig = async () => {
  * @returns {Promise<AppConfig>}
  */
 async function getAppConfig(options = {}) {
+  console.log('[Config Debug] getAppConfig called with options:', JSON.stringify(options, null, 2));
   const { role, refresh } = options;
 
   const cache = getLogStores(CacheKeys.APP_CONFIG);
-  const cacheKey = role ? role : BASE_CONFIG_KEY;
+  const cacheKey = role ? `${CacheKeys.APP_CONFIG}:${role}` : CacheKeys.APP_CONFIG;
+  
+  console.log(`[Config Debug] Using cache key: ${cacheKey}`);
+  console.log(`[Config Debug] Cache refresh requested: ${!!refresh}`);
+  
+  let appConfig = await cache.get(cacheKey);
+  console.log(`[Config Debug] Cached config found: ${!!appConfig}`);
 
-  if (!refresh) {
-    const cached = await cache.get(cacheKey);
-    if (cached) {
-      return cached;
-    }
+  if (!appConfig || refresh) {
+    console.log('[Config Debug] Loading base config...');
+    const baseConfig = await loadBaseConfig();
+    console.log('[Config Debug] Base config loaded, setting cache...');
+    appConfig = baseConfig;
+    await cache.set(cacheKey, baseConfig);
+    console.log('[Config Debug] Cache updated');
   }
 
-  let baseConfig = await cache.get(BASE_CONFIG_KEY);
-  if (!baseConfig) {
+  if (!appConfig) {
     logger.info('[getAppConfig] App configuration not initialized. Initializing AppService...');
-    baseConfig = await loadBaseConfig();
+    appConfig = await loadBaseConfig();
 
-    if (!baseConfig) {
+    if (!appConfig) {
       throw new Error('Failed to initialize app configuration through AppService.');
     }
 
