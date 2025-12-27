@@ -249,13 +249,60 @@ export async function performStartupChecks(appConfig?: AppConfig) {
  */
 export function checkConfig(config: Partial<TCustomConfig>) {
   // Debug logging
+  const cwd = process.cwd();
+  const configPath = `${cwd}/librechat.yaml`;
+  
   logger.debug('=== Config Debug Info ===');
+  logger.debug(`Current working directory: ${cwd}`);
+  logger.debug(`Looking for config at: ${configPath}`);
   logger.debug('Config object received:', JSON.stringify(config, null, 2));
   logger.debug('Expected CONFIG_VERSION:', Constants.CONFIG_VERSION);
   logger.debug('Config has version property:', 'version' in config);
   logger.debug('Config version value:', config.version);
   logger.debug('Config type:', typeof config);
   logger.debug('Config keys:', Object.keys(config));
+  
+  // Try to read the config file directly for debugging
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const configExists = fs.existsSync(configPath);
+    logger.debug(`Config file exists: ${configExists}`);
+    
+    if (configExists) {
+      const fileContent = fs.readFileSync(configPath, 'utf8');
+      logger.debug('Config file content (first 500 chars):', fileContent.substring(0, 500));
+      
+      // Try to parse the YAML to verify it's valid
+      try {
+        const yaml = require('js-yaml');
+        const parsedConfig = yaml.load(fileContent);
+        logger.debug('Successfully parsed config:', JSON.stringify(parsedConfig, null, 2));
+      } catch (parseError) {
+        logger.error('Failed to parse config file:', parseError);
+      }
+    } else {
+      // Try to find the config file in parent directories
+      let currentDir = cwd;
+      let foundConfig = false;
+      
+      while (currentDir !== '/' && !foundConfig) {
+        currentDir = path.dirname(currentDir);
+        const testPath = path.join(currentDir, 'librechat.yaml');
+        if (fs.existsSync(testPath)) {
+          logger.debug(`Found config file at: ${testPath}`);
+          foundConfig = true;
+        }
+      }
+      
+      if (!foundConfig) {
+        logger.debug('No config file found in current or parent directories');
+      }
+    }
+  } catch (error) {
+    logger.error('Error while checking config file:', error);
+  }
+  
   logger.debug('=========================');
 
   if (!config || typeof config !== 'object') {
@@ -265,6 +312,8 @@ export function checkConfig(config: Partial<TCustomConfig>) {
 
   if (config.version === undefined) {
     logger.warn('Config version is undefined. The config file might be missing or malformed.');
+    logger.warn(`Please check if the config file exists at: ${configPath}`);
+    logger.warn('And that it contains a valid YAML configuration with a version field.');
   } else if (config.version !== Constants.CONFIG_VERSION) {
     logger.warn(
       `\nOutdated Config version: ${config.version}\n` +
