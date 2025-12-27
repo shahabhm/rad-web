@@ -1,0 +1,73 @@
+# Configuration version (required)
+version: 1.2.1
+
+# Cache settings: Set to true to enable caching
+cache: true
+
+# Custom interface configuration
+interface:
+  customWelcome: 'Welcome to Rastar Chat! Your AI-powered conversation assistant.'
+  fileSearch: false
+  
+  # Privacy policy settings
+  privacyPolicy:
+    externalUrl: 'https://librechat.ai/privacy-policy'
+    openNewTab: true
+
+  # Terms of service
+  termsOfService:
+    externalUrl: 'https://librechat.ai/tos'
+    openNewTab: true
+    modalAcceptance: false
+
+  endpointsMenu: false
+  modelSelect: false
+  parameters: false
+  sidePanel: false
+  presets: false
+  prompts: false
+  bookmarks: false
+  multiConvo: false
+  agents: false
+  peoplePicker:
+    users: false
+    groups: false
+    roles: false
+  marketplace:
+      use: false
+  fileCitations: true
+
+# Rate limiting configuration
+rateLimits:
+  fileUploads:
+    ipMax: 100
+    ipWindowInMinutes: 60
+    userMax: 50
+    userWindowInMinutes: 60
+  conversationsImport:
+    ipMax: 100
+    ipWindowInMinutes: 60
+    userMax: 50
+    userWindowInMinutes: 60
+
+# Custom Endpoints Configuration
+endpoints:
+  custom:
+    - name: "OpenRouter"
+      apiKey: "${OPENROUTER_KEY}"
+      baseURL: "https://openrouter.ai/api/v1"
+      models:
+        default: [
+          "openai/gpt-4o-mini",
+          "google/gemini-2.0-flash-exp:free",
+          "meta-llama/llama-3.3-70b-instruct",
+          "anthropic/claude-3.5-sonnet",
+          "mistralai/mistral-large",
+          "qwen/qwen-2.5-72b-instruct"
+        ]
+        fetch: false
+      titleConvo: true
+      titleModel: "openai/gpt-4o-mini"
+      defaultModel: "openai/gpt-4o-mini"
+      dropParams: ["stop"]
+      modelDisplayLabel: "OpenRouter"
