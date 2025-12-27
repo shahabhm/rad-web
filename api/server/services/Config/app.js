@@ -50,18 +50,22 @@ async function getAppConfig(options = {}) {
   }
 
   if (!appConfig) {
-    logger.info('[getAppConfig] App configuration not initialized. Initializing AppService...');
+    console.log('[Config Debug] No config found in cache, loading base config...');
     appConfig = await loadBaseConfig();
 
     if (!appConfig) {
-      throw new Error('Failed to initialize app configuration through AppService.');
+      const errorMsg = 'Failed to load app configuration through AppService';
+      console.error(`[Config Debug] ${errorMsg}`);
+      throw new Error(errorMsg);
     }
 
-    if (baseConfig.availableTools) {
-      await setCachedTools(baseConfig.availableTools);
+    if (appConfig.availableTools) {
+      console.log('[Config Debug] Setting cached tools...');
+      await setCachedTools(appConfig.availableTools);
     }
 
-    await cache.set(BASE_CONFIG_KEY, baseConfig);
+    console.log('[Config Debug] Caching loaded config...');
+    await cache.set(cacheKey, appConfig);
   }
 
   // For now, return the base config
